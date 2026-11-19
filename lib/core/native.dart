@@ -165,6 +165,16 @@ class Native {
 
   /// Asks the launcher to pin a "Paying" icon to the home screen. False
   /// when the launcher cannot pin.
+  /// Asks the launcher to add the 1x1 Levels widget (on or off in one
+  /// tap). False when the launcher cannot.
+  static Future<bool> pinWidget() async {
+    try {
+      return await _c.invokeMethod<bool>('pinWidget') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   static Future<bool> pinPay() async {
     try {
       return await _c.invokeMethod<bool>('pinPay') ?? false;

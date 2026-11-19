@@ -843,7 +843,7 @@ class _Paying extends StatelessWidget {
                     style: body(context, 15, w: FontWeight.w600),
                   ),
                   Text(
-                    'Paying with a bank app? Pause Levels first.',
+                    'Every app plays at the volume you set',
                     style: body(context, 13.5, color: p.sub),
                   ),
                   const SizedBox(height: 8),
@@ -853,7 +853,7 @@ class _Paying extends StatelessWidget {
                       context,
                       14,
                       w: FontWeight.w600,
-                      color: Pal.accent,
+                      color: p.accentText,
                     ),
                   ),
                 ],
@@ -868,13 +868,42 @@ class _Paying extends StatelessWidget {
                   step(
                     '1',
                     'Before you pay',
-                    'Pull down the shade and tap Pause for a payment.',
+                    'Tap Pause for a payment in the notification, or tap '
+                        'the Levels widget, or Paying in the app.',
                   ),
                   step(
                     '2',
                     'After you pay',
                     'Tap the Levels note to turn it back on. Still blocked? '
                         'Restart your phone; the note waits for you.',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            // The widget is the fastest of the three, so it is offered here
+            // rather than left for the user to find in the launcher.
+            CupertinoButton(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              minimumSize: const Size(44, 44),
+              color: p.fill,
+              borderRadius: BorderRadius.circular(22),
+              onPressed: () async {
+                if (!await Native.pinWidget()) await Native.pinPay();
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(CupertinoIcons.add_circled, size: 18, color: p.accentText),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Add the Levels widget',
+                    style: body(
+                      context,
+                      14.5,
+                      w: FontWeight.w600,
+                      color: p.accentText,
+                    ),
                   ),
                 ],
               ),

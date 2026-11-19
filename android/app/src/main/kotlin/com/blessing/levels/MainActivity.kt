@@ -144,6 +144,19 @@ class MainActivity : FlutterActivity() {
                 }
                 "batteryAsk" -> { Battery.requestExemption(this); result.success(null) }
                 "batteryOem" -> result.success(Battery.openOem(this))
+                // The 1x1 knob widget: Levels on or off in one tap, from
+                // the home screen. False when the launcher cannot pin.
+                "pinWidget" -> {
+                    var ok = false
+                    if (Build.VERSION.SDK_INT >= 26) try {
+                        val mgr = android.appwidget.AppWidgetManager.getInstance(this)
+                        if (mgr.isRequestPinAppWidgetSupported) {
+                            ok = mgr.requestPinAppWidget(
+                                ComponentName(this, KnobWidget::class.java), null, null)
+                        }
+                    } catch (_: Exception) {}
+                    result.success(ok)
+                }
                 "pinPay" -> {
                     // A real "Paying" icon on the home screen: the manifest
                     // shortcut "pay", pinned. Found where the user looks,

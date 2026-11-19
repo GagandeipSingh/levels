@@ -142,11 +142,12 @@ class Settings extends StatelessWidget {
                     },
                   ),
                   Tile(
-                    title: 'Paying icon',
-                    subtitle: 'On your home screen, one tap',
+                    title: 'Levels widget',
+                    subtitle: 'On your home screen: on or off in one tap',
                     chevron: true,
                     onTap: () async {
-                      final ok = await Native.pinPay();
+                      final ok =
+                          await Native.pinWidget() || await Native.pinPay();
                       if (!ok && context.mounted) {
                         _toast(context, 'This home screen cannot add icons.');
                       }

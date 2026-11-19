@@ -53,6 +53,13 @@ object PayNote {
     private const val PREFS = "levels"
     private const val KEY_PAUSED = "paid_pause"
     private const val KEY_BOOT_REMINDED = "paid_boot_reminded"
+    /** Levels has run on this phone at least once since it was last set up
+     *  or turned back on. The "switched off" note is only for someone who
+     *  had it working: alerting a user who never turned it on is nagging. */
+    private const val KEY_WORKING = "was_working"
+    /** The "switched off by your phone" note was already shown for this
+     *  loss, so a restart or an update does not show it again. */
+    private const val KEY_LOST_TOLD = "lost_told"
 
     /** The app's own background (lib/ui/kit.dart, Pal.bg) for the phone's
      *  mode, so the entry looks like Levels itself. */
@@ -107,7 +114,8 @@ object PayNote {
         return NotificationCompat.Builder(ctx, CH_ON)
             .setSmallIcon(R.drawable.ic_tile)
             .setContentTitle("Levels is on")
-            .setContentText("Paying with a bank app? Pause Levels first.")
+            // What Levels does; the button below covers paying.
+            .setContentText("Every app plays at the volume you set")
             .addAction(R.drawable.ic_tile, "Pause for a payment", pause)
             .setContentIntent(openApp(ctx, 1))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -123,6 +131,9 @@ object PayNote {
     fun start(svc: LevelsService) {
         cancelPaused(svc)
         clear(svc)
+        try {
+            prefs(svc).edit().putBoolean(KEY_WORKING, true).putBoolean(KEY_LOST_TOLD, false).apply()
+        } catch (_: Throwable) {}
         try {
             if (Build.VERSION.SDK_INT >= 34) {
                 svc.startForeground(ID_ON, running(svc), ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
@@ -158,9 +169,47 @@ object PayNote {
             svc.getSystemService(NotificationManager::class.java)?.cancel(ID_ON)
         } catch (_: Throwable) {}
         val paused = isPaused(svc)
-        if (!paused && !fromSettings) return
-        if (!paused) prefs(svc).edit().putBoolean(KEY_PAUSED, true).apply()
-        postPaused(svc, paused)
+        if (paused || fromSettings) {
+            if (!paused) prefs(svc).edit().putBoolean(KEY_PAUSED, true).apply()
+            postPaused(svc, paused)
+            return
+        }
+        // Not the user: the phone took the switch away (a battery manager,
+        // an OEM cleaner, Android itself). Say so, once.
+        postLost(svc)
+    }
+
+    /**
+     * The phone switched Levels off without the user asking. Posted from the
+     * service's destroy when it runs, and otherwise after the next restart or
+     * update (a force stop kills the process with no callback at all, so
+     * nothing can run until then). Only for a user who had Levels working,
+     * only while the switch is still off, and once per loss.
+     */
+    fun postLost(ctx: Context) {
+        try {
+            val p = prefs(ctx)
+            if (!p.getBoolean(KEY_WORKING, false)) return
+            if (p.getBoolean(KEY_LOST_TOLD, false)) return
+            if (!canPost(ctx)) return
+            val nm = ctx.getSystemService(NotificationManager::class.java) ?: return
+            channels(ctx, nm)
+            val text = "Your phone stopped it. Tap to switch it back on"
+            val n = NotificationCompat.Builder(ctx, CH_PAUSED)
+                .setSmallIcon(R.drawable.ic_tile)
+                .setContentTitle("Levels was switched off")
+                .setContentText(text)
+                    .addAction(R.drawable.ic_tile, "Turn back on", openApp(ctx, 5, ACTION_TURN_ON))
+                .setContentIntent(openApp(ctx, 4, ACTION_TURN_ON))
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setColor(fill(ctx))
+                .setOngoing(false)
+                .setAutoCancel(true)
+                .build()
+            // Same id as the paused note: at most one "Levels is off" entry.
+            nm.notify(ID_PAUSED, n)
+            p.edit().putBoolean(KEY_LOST_TOLD, true).apply()
+        } catch (_: Throwable) {}
     }
 
     fun isPaused(ctx: Context) = try {
@@ -190,13 +239,13 @@ object PayNote {
         if (!canPost(ctx)) return
         val nm = ctx.getSystemService(NotificationManager::class.java) ?: return
         channels(ctx, nm)
-        val text = "Pay now. If the app still says no, restart your phone. " +
-            "Tap here to turn Levels back on when you are done."
+        // One line: the restart tip lives in onboarding.
+        val text = if (byButton) "Paid? Tap here to turn Levels back on"
+            else "Done? Tap here to turn Levels back on"
         val n = NotificationCompat.Builder(ctx, CH_PAUSED)
             .setSmallIcon(R.drawable.ic_tile)
             .setContentTitle(if (byButton) "Levels is paused for your payment" else "Levels is off")
             .setContentText(text)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .addAction(R.drawable.ic_tile, "Turn back on", openApp(ctx, 5, ACTION_TURN_ON))
             .setContentIntent(openApp(ctx, 4, ACTION_TURN_ON))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -256,8 +305,10 @@ object PayNote {
                 }
                 Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED -> {
                     try {
-                        if (!isPaused(ctx)) return
                         if (serviceEnabled(ctx)) return
+                        // Off, and not by the user: a force stop (OEM
+                        // battery managers do this) left no callback.
+                        if (!isPaused(ctx)) { postLost(ctx); return }
                         val p = prefs(ctx)
                         if (p.getBoolean(KEY_BOOT_REMINDED, false)) return
                         p.edit().putBoolean(KEY_BOOT_REMINDED, true).apply()
