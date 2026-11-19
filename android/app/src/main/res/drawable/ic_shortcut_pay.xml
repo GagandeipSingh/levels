@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp" android:height="48dp" android:viewportWidth="48" android:viewportHeight="48">
+    <!-- The app icon's cream and ink, so it reads as Levels: a card, and a
+         teal pause badge for "Levels steps aside while you pay". -->
+    <path android:fillColor="#FFF3ECDC" android:pathData="M24,0a24,24 0,1 1,0 48a24,24 0,1 1,0 -48z"/>
+    <group android:translateX="-2.75" android:translateY="-3.75">
+    <path android:fillColor="#FF001219" android:fillType="evenOdd"
+        android:pathData="M13.5,14h19a2.5,2.5 0,0 1,2.5 2.5v11.5a2.5,2.5 0,0 1,-2.5 2.5h-19a2.5,2.5 0,0 1,-2.5 -2.5v-11.5a2.5,2.5 0,0 1,2.5 -2.5zM11,17.8v2.4h24v-2.4zM14.5,24.5h6v2h-6z"/>
+    <path android:fillColor="#FFF3ECDC" android:pathData="M33,22.5a9.5,9.5 0,1 1,0 19a9.5,9.5 0,1 1,0 -19z"/>
+    <path android:fillColor="#FF0A9396" android:pathData="M33,24.5a7.5,7.5 0,1 1,0 15a7.5,7.5 0,1 1,0 -15z"/>
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M29.8,28.5h2.2v7h-2.2zM34,28.5h2.2v7h-2.2z"/>
+    </group>
+</vector>

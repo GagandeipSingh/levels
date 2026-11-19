@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Levels is on: the app icon's knob. Teal level arc, faint track,
+         ink knob with its pointer at the level. -->
+    <group android:pivotX="54" android:pivotY="54" android:scaleX="1.2" android:scaleY="1.2">
+        <path android:strokeColor="#2E001219" android:strokeWidth="5.5" android:strokeLineCap="round"
+            android:fillColor="#00000000" android:pathData="M67.38,39.14A20,20 0,0 1,66.86 69.32"/>
+        <path android:strokeColor="#FF0A9396" android:strokeWidth="5.5" android:strokeLineCap="round"
+            android:fillColor="#00000000" android:pathData="M41.14,69.32A20,20 0,1 1,67.38 39.14"/>
+        <path android:fillColor="#FF001219" android:pathData="M54,43a11,11 0,1 1,0 22a11,11 0,1 1,0 -22z"/>
+        <path android:strokeColor="#FFF3ECDC" android:strokeWidth="2.6" android:strokeLineCap="round"
+            android:fillColor="#00000000" android:pathData="M54,54L58.7,48.8"/>
+    </group>
+</vector>
