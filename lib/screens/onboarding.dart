@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 
 import '../core/model.dart';
 import '../core/native.dart';
+import '../ui/glass_chrome.dart';
 import '../ui/kit.dart';
 import '../ui/motion.dart';
 import 'home.dart';
@@ -118,58 +119,75 @@ class _OnboardingState extends State<Onboarding> with WidgetsBindingObserver {
     // The paying page exists only once the switch is on.
     final pages = model.serviceOn ? 4 : 3;
     final last = _page >= 2;
-    return Scaffold(
-      backgroundColor: p.bg,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: Backdrop()),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 560),
-              child: PageView(
-                controller: _pages,
-                onPageChanged: (i) => setState(() => _page = i),
-                children: [
-                  const _What(),
-                  const _Touches(),
-                  const _Permission(),
-                  if (model.serviceOn) const _Paying(),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            left: 16,
-            right: 20,
-            bottom: mq.padding.bottom + 20,
-            child: Center(
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final overlay = dark
+        ? SystemUiOverlayStyle.light
+        : SystemUiOverlayStyle.dark;
+    // Same system bars as every other screen (GlassScaffold): clear bars,
+    // nav buttons following the status icons. Without it this screen kept
+    // a solid black nav bar on 3-button phones.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: overlay.copyWith(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemNavigationBarContrastEnforced: false,
+        systemNavigationBarIconBrightness: overlay.statusBarIconBrightness,
+      ),
+      child: Scaffold(
+        backgroundColor: p.bg,
+        body: Stack(
+          children: [
+            const Positioned.fill(child: Backdrop()),
+            Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
-                child: Row(
+                constraints: const BoxConstraints(maxWidth: 560),
+                child: PageView(
+                  controller: _pages,
+                  onPageChanged: (i) => setState(() => _page = i),
                   children: [
-                    // Notifications already allowed: Done is the only way on.
-                    if (!(_page == 3 && _notifOk))
-                      TextAction(
-                        last ? 'Not now' : 'Skip',
-                        color: p.sub,
-                        onTap: last ? _finish : () => _go(2),
-                      ),
-                    const Spacer(),
-                    _Advance(
-                      progress: (_page + 1) / pages,
-                      label: _page == 3
-                          ? (_notifOk ? 'Done' : 'Allow notifications')
-                          : last
-                          ? (model.serviceOn ? 'Next' : 'Agree and turn on')
-                          : null,
-                      onTap: _primary,
-                    ),
+                    const _What(),
+                    const _Touches(),
+                    const _Permission(),
+                    if (model.serviceOn) const _Paying(),
                   ],
                 ),
               ),
             ),
-          ),
-        ],
+            Positioned(
+              left: 16,
+              right: 20,
+              bottom: mq.padding.bottom + 20,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Row(
+                    children: [
+                      // Notifications already allowed: Done is the only way on.
+                      if (!(_page == 3 && _notifOk))
+                        TextAction(
+                          last ? 'Not now' : 'Skip',
+                          color: p.sub,
+                          onTap: last ? _finish : () => _go(2),
+                        ),
+                      const Spacer(),
+                      _Advance(
+                        progress: (_page + 1) / pages,
+                        label: _page == 3
+                            ? (_notifOk ? 'Done' : 'Allow notifications')
+                            : last
+                            ? (model.serviceOn ? 'Next' : 'Agree and turn on')
+                            : null,
+                        onTap: _primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const NavButtonBacking(),
+          ],
+        ),
       ),
     );
   }
@@ -894,7 +912,11 @@ class _Paying extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(CupertinoIcons.add_circled, size: 18, color: p.accentText),
+                  Icon(
+                    CupertinoIcons.add_circled,
+                    size: 18,
+                    color: p.accentText,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Add the Levels widget',
